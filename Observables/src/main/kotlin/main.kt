@@ -1,6 +1,9 @@
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.subscribeBy
+import java.io.File
+import java.io.FileNotFoundException
 import kotlin.math.roundToInt
 
 fun main(){
@@ -118,5 +121,50 @@ fun main(){
         }
         disposables.dispose()
     }
+
+    exampleOf("Single") {
+        val subscriptions = CompositeDisposable()
+        fun loadText(filename: String): Single<String> {
+            return Single.create create@{ emitter ->
+                val file = File(filename)
+
+                if (!file.exists()) {
+                    emitter.onError(FileNotFoundException("Can’t find $filename"))
+                    return@create
+                }
+                val contents = file.readText(Charsets.UTF_8)
+                emitter.onSuccess(contents)
+            }
+        }
+
+        val observer = loadText("Copyright.txt")
+            .subscribeBy(
+                onSuccess = { println(it) },
+                onError = { println("Error, $it") }
+            )
+        subscriptions.add(observer)
+    }
+
+    exampleOf("Challenge"){
+        val subscriptions = CompositeDisposable()
+
+        val observable = Observable.never<Any>()
+
+        val disposable = observable
+            .doOnNext { println(it) }
+            .doOnComplete { println("Completed") }
+            .doOnSubscribe { println("Subscribed") }
+            .doOnDispose { println("Disposed") }
+            .subscribeBy(
+                onNext = { println(it) },
+                onComplete = { println("Completed") }
+            )
+
+        subscriptions.add(disposable)
+        subscriptions.dispose()
+
+    }
+
+
 
 }
