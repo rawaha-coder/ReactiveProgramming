@@ -160,4 +160,32 @@ fun main(args: Array<String>) {
         )
     }
 
+    exampleOf("Sharing subscriptions") {
+
+        var start = 0
+        fun getStartNumber(): Int {
+            start++
+            return start
+        }
+        val numbers = Observable.create<Int> { emitter ->
+            val start = getStartNumber()
+            emitter.onNext(start)
+            emitter.onNext(start + 1)
+            emitter.onNext(start + 2)
+            emitter.onComplete()
+        }
+        numbers
+            .subscribeBy(
+                onNext = { println("element [$it]") },
+                onComplete = { println(("-------------"))}
+            )
+
+        numbers.share()
+            .subscribeBy(
+                onNext = { println("element [$it]") },
+                onComplete = { println(("-------------"))}
+            )
+
+    }
+
 }
